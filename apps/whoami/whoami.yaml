@@ -22,6 +22,13 @@ spec:
         image: traefik/whoami:v1.10.3
         ports:
         - containerPort: 80
+        resources:
+          requests:
+            cpu: 50m
+            memory: 32Mi
+          limits:
+            cpu: 200m
+            memory: 64Mi
         readinessProbe:
           httpGet: {path: /, port: 80}
           periodSeconds: 5
@@ -37,3 +44,23 @@ spec:
   ports:
   - port: 80
     targetPort: 80
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: whoami
+  namespace: gitops-demo
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: whoami
+  minReplicas: 2
+  maxReplicas: 5
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50
