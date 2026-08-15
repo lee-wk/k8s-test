@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: curl-client
+  namespace: gitops-demo
+  labels: {app: curl-client}
+spec:
+  containers:
+  - name: curl
+    image: curlimages/curl:8.10.1
+    command: ["sh", "-c", "sleep infinity"]
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: whoami-l7
+  namespace: gitops-demo
+spec:
+  endpointSelector:
+    matchLabels:
+      app: whoami
+  ingress:
+  - fromEndpoints:
+    - matchLabels:
+        app: curl-client
+    toPorts:
+    - ports:
+      - port: "80"
+        protocol: TCP
+      rules:
+        http:
+        - method: "GET"
+          path: "/"
